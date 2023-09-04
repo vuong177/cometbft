@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	"github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -38,6 +39,18 @@ func UpdateValidator(pk []byte, power int64, keyType string) ValidatorUpdate {
 			PubKey: pkp,
 			Power:  power,
 		}
+	case bls12381.KeyType:
+		pke := bls12381.FromBytes(pk)
+		pkp, err := cryptoenc.PubKeyToProto(pke)
+		if err != nil {
+			panic(err)
+		}
+		return ValidatorUpdate{
+			// Address:
+			PubKey: pkp,
+			Power:  power,
+		}
+
 	default:
 		panic(fmt.Sprintf("key type %s not supported", keyType))
 	}

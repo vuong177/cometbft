@@ -39,6 +39,15 @@ func (pubKey PubKey) Bytes() []byte {
 	return pubKey.Marshal()
 }
 
+// Bytes returns the byte representation of the PubKey.
+func FromBytes(bz []byte) PubKey {
+	pubKey, err := blst.PublicKeyFromBytes(bz)
+	if err != nil {
+		return PubKey{}
+	}
+	return PubKey{pubKey}
+}
+
 // Equals - checks that two public keys are the same time
 // Runs in constant time based on length of the keys.
 func (pubKey PubKey) Equals(other crypto.PubKey) bool {
@@ -59,7 +68,7 @@ func (pubKey PubKey) VerifySignature(msg []byte, sigBytes []byte) bool {
 }
 
 func (pubKey PubKey) String() string {
-	return fmt.Sprintf("PubKeySr25519{%X}", []byte(pubKey.Marshal()))
+	return fmt.Sprintf("PubKeyBLS12-381{%X}", []byte(pubKey.Marshal()))
 }
 
 func (pubKey PubKey) Type() string {
