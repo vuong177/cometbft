@@ -8,18 +8,15 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/prysmaticlabs/prysm/v4/config/params"
 	"github.com/prysmaticlabs/prysm/v4/crypto/bls/blst"
-	"github.com/prysmaticlabs/prysm/v4/crypto/bls/common"
 )
 
 // PubKey implements crypto.PubKey for the bls12-381 signature scheme.
-type PubKey struct {
-	common.PublicKey
-}
+type PubKey []byte
 
 var _ crypto.PubKey = PubKey{}
 
 var (
-	KeyType = "bls12-381"
+	KeyType = "bls12381"
 
 	// PubKeySize is the number of bytes in an bls12-381 public key.
 	PubKeySize = params.BeaconConfig().BLSPubkeyLength
@@ -27,25 +24,18 @@ var (
 
 // Address is the SHA256-20 of the raw pubkey bytes.
 func (pubKey PubKey) Address() crypto.Address {
-	if len(pubKey.Marshal()) != PubKeySize {
-		panic("pubkey is incorrect size")
-	}
 
 	return crypto.Address(tmhash.SumTruncated(pubKey.Bytes()[:]))
 }
 
 // Bytes returns the byte representation of the PubKey.
 func (pubKey PubKey) Bytes() []byte {
-	return pubKey.Marshal()
+	return pubKey
 }
 
 // Bytes returns the byte representation of the PubKey.
 func FromBytes(bz []byte) PubKey {
-	pubKey, err := blst.PublicKeyFromBytes(bz)
-	if err != nil {
-		return PubKey{}
-	}
-	return PubKey{pubKey}
+	return bz
 }
 
 // Equals - checks that two public keys are the same time
@@ -63,12 +53,20 @@ func (pubKey PubKey) VerifySignature(msg []byte, sigBytes []byte) bool {
 	if err != nil {
 		return false
 	}
+	blstPubKey, err := blst.PublicKeyFromBytes(pubKey)
+	if err != nil {
+		return false
+	}
 
-	return signature.Verify(pubKey.PublicKey, msg)
+	if err != nil {
+		return false
+	}
+
+	return signature.Verify(blstPubKey, msg)
 }
 
 func (pubKey PubKey) String() string {
-	return fmt.Sprintf("PubKeyBLS12-381{%X}", []byte(pubKey.Marshal()))
+	return fmt.Sprintf("PubKeyBLS12-381{%s}", []byte(pubKey))
 }
 
 func (pubKey PubKey) Type() string {

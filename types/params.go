@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -25,9 +26,12 @@ const (
 	ABCIPubKeyTypeSecp256k1 = secp256k1.KeyType
 )
 
+var ABCIPubKeyTypeBLS12381 = bls12381.KeyType
+
 var ABCIPubKeyTypesToNames = map[string]string{
 	ABCIPubKeyTypeEd25519:   ed25519.PubKeyName,
 	ABCIPubKeyTypeSecp256k1: secp256k1.PubKeyName,
+	ABCIPubKeyTypeBLS12381:  bls12381.PubKeyName,
 }
 
 // ConsensusParams contains consensus critical parameters that determine the

@@ -3,12 +3,9 @@ package bls12381
 import (
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/prysmaticlabs/prysm/v4/crypto/bls/blst"
-	"github.com/prysmaticlabs/prysm/v4/crypto/bls/common"
 )
 
-type PrivKey struct {
-	common.SecretKey
-}
+type PrivKey []byte
 
 var _ crypto.PrivKey = PrivKey{}
 
@@ -19,7 +16,7 @@ func RandKey() (PrivKey, error) {
 	if err != nil {
 		return PrivKey{}, err
 	}
-	return PrivKey{SecretKey: secretKey}, nil
+	return secretKey.Marshal(), nil
 }
 
 func GenPrivKey() PrivKey {
@@ -32,26 +29,26 @@ func GenPrivKey() PrivKey {
 
 // Sign never return err
 func (priv PrivKey) Sign(msg []byte) ([]byte, error) {
-	return priv.SecretKey.Sign(msg).Marshal(), nil
+	blstSecretKey, _ := blst.SecretKeyFromBytes(priv)
+	return blstSecretKey.Sign(msg).Marshal(), nil
 }
 
 func (priv PrivKey) Bytes() []byte {
-	return priv.SecretKey.Marshal()
+	return priv
 }
 
 // Equals - you probably don't need to use this.
 // Runs in constant time based on length of the keys.
 func (privKey PrivKey) Equals(other crypto.PrivKey) bool {
 	if otherSr, ok := other.(PrivKey); ok {
-		return privKey.PublicKey().Equals(otherSr.PublicKey())
+		return privKey.Equals(otherSr)
 	}
 	return false
 }
 
 func (privKey PrivKey) PubKey() crypto.PubKey {
-	return PubKey{
-		privKey.PublicKey(),
-	}
+	blstSecretKey, _ := blst.SecretKeyFromBytes(privKey)
+	return FromBytes(blstSecretKey.PublicKey().Marshal())
 }
 
 func (privKey PrivKey) Type() string {

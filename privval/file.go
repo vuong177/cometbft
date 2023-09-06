@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/ed25519"
 	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -173,6 +174,12 @@ func GenFilePV(keyFilePath, stateFilePath string) *FilePV {
 	return NewFilePV(ed25519.GenPrivKey(), keyFilePath, stateFilePath)
 }
 
+// GenFilePV generates a new validator with randomly generated private key
+// and sets the filePaths, but does not call Save().
+func GenFileBLS12381PV(keyFilePath, stateFilePath string) *FilePV {
+	return NewFilePV(bls12381.GenPrivKey(), keyFilePath, stateFilePath)
+}
+
 // LoadFilePV loads a FilePV from the filePaths.  The FilePV handles double
 // signing prevention by persisting data to the stateFilePath.  If either file path
 // does not exist, the program will exit.
@@ -233,6 +240,29 @@ func LoadOrGenFilePV(keyFilePath, stateFilePath string) *FilePV {
 	} else {
 		pv = GenFilePV(keyFilePath, stateFilePath)
 		pv.Save()
+	}
+	return pv
+}
+
+// LoadOrGenFilePV loads a FilePV from the given filePaths
+// or else generates a new one and saves it to the filePaths.
+func LoadOrGenFileCustomPV(keyFilePath, stateFilePath string, keytype string) *FilePV {
+	var pv *FilePV
+	if cmtos.FileExists(keyFilePath) {
+		pv = LoadFilePV(keyFilePath, stateFilePath)
+	} else {
+		if keytype == "bls12381" {
+			pv = GenFileBLS12381PV(keyFilePath, stateFilePath)
+			fmt.Println("======pv========")
+			fmt.Println(pv)
+			fmt.Println("=======pv=======")
+
+			pv.Save()
+
+		} else {
+			pv = GenFilePV(keyFilePath, stateFilePath)
+			pv.Save()
+		}
 	}
 	return pv
 }

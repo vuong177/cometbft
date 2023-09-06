@@ -7,7 +7,9 @@ import (
 	"os"
 
 	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/bls12381"
 	"github.com/cometbft/cometbft/crypto/ed25519"
+
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmtos "github.com/cometbft/cometbft/libs/os"
 )
@@ -54,6 +56,42 @@ func LoadOrGenNodeKey(filePath string) (*NodeKey, error) {
 			return nil, err
 		}
 		return nodeKey, nil
+	}
+
+	privKey := ed25519.GenPrivKey()
+	nodeKey := &NodeKey{
+		PrivKey: privKey,
+	}
+
+	if err := nodeKey.SaveAs(filePath); err != nil {
+		return nil, err
+	}
+
+	return nodeKey, nil
+}
+
+// LoadOrGenNodeKey attempts to load the NodeKey from the given filePath. If
+// the file does not exist, it generates and saves a new NodeKey.
+func LoadOrGenNodeKeyCustom(filePath string, keytype string) (*NodeKey, error) {
+	if cmtos.FileExists(filePath) {
+		nodeKey, err := LoadNodeKey(filePath)
+		if err != nil {
+			return nil, err
+		}
+		return nodeKey, nil
+	}
+
+	if keytype == "bls12381" {
+		privKey := bls12381.GenPrivKey()
+		nodeKey := &NodeKey{
+			PrivKey: privKey,
+		}
+		fmt.Println(privKey)
+		if err := nodeKey.SaveAs(filePath); err != nil {
+			fmt.Println("SaveAs")
+
+			return nil, err
+		}
 	}
 
 	privKey := ed25519.GenPrivKey()
